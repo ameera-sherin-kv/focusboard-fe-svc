@@ -120,10 +120,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange, isDrag
 
             <div className="flex items-center gap-2 flex-wrap">
               <Badge 
-                variant="outline" 
                 className={cn(
-                  'text-xs px-2 py-1 border-current',
-                  `text-${priorityConfig[task.priority].color}`
+                  'text-xs px-2 py-1 text-white border-0',
+                  task.priority === 'high' && 'bg-priority-high',
+                  task.priority === 'medium' && 'bg-priority-medium',
+                  task.priority === 'low' && 'bg-priority-low'
                 )}
               >
                 {priorityConfig[task.priority].label}

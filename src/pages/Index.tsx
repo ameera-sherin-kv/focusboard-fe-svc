@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { FocusBoardProvider } from '@/contexts/FocusBoardContext';
 import { DailyPlannerBoard } from '@/components/DailyPlannerBoard';
-import { AccomplishmentsPanel } from '@/components/AccomplishmentsPanel';
 import { StatusDashboard } from '@/components/StatusDashboard';
 import { TimelineLog } from '@/components/TimelineLog';
 import { ExportOptions } from '@/components/ExportOptions';
@@ -11,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   LayoutDashboard, 
   CheckSquare, 
-  Trophy, 
   BarChart3, 
   History,
   Target,
@@ -50,14 +48,10 @@ const Index = () => {
         {/* Main Content */}
         <main className="container mx-auto px-6 py-8">
           <Tabs defaultValue="planner" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 lg:w-[600px] mx-auto">
+            <TabsList className="grid w-full grid-cols-3 lg:w-[450px] mx-auto">
               <TabsTrigger value="planner" className="gap-2">
                 <CheckSquare className="h-4 w-4" />
                 <span className="hidden sm:inline">Planner</span>
-              </TabsTrigger>
-              <TabsTrigger value="accomplishments" className="gap-2">
-                <Trophy className="h-4 w-4" />
-                <span className="hidden sm:inline">Wins</span>
               </TabsTrigger>
               <TabsTrigger value="dashboard" className="gap-2">
                 <BarChart3 className="h-4 w-4" />
@@ -71,10 +65,6 @@ const Index = () => {
 
             <TabsContent value="planner" className="space-y-6">
               <DailyPlannerBoard />
-            </TabsContent>
-
-            <TabsContent value="accomplishments" className="space-y-6">
-              <AccomplishmentsPanel />
             </TabsContent>
 
             <TabsContent value="dashboard" className="space-y-6">

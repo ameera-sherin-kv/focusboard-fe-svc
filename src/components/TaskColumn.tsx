@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TaskStatus, Task } from '@/types/task';
 import { TaskCard } from './TaskCard';
+import { CompletionDialog, CompletionData } from './CompletionDialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -12,6 +13,7 @@ import {
   Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useFocusBoard } from '@/contexts/FocusBoardContext';
 
 interface TaskColumnProps {
   status: TaskStatus;
@@ -57,6 +59,12 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
   onTaskMove, 
   onAddTask 
 }) => {
+  const { updateTask } = useFocusBoard();
+  const [completionDialog, setCompletionDialog] = useState<{
+    isOpen: boolean;
+    task: Task | null;
+  }>({ isOpen: false, task: null });
+  
   const config = columnConfig[status];
   const Icon = config.icon;
 
@@ -68,6 +76,13 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const taskId = e.dataTransfer.getData('text/plain');
+    if (taskId && status === 'completed') {
+      const task = tasks.find(t => t.id === taskId);
+      if (task && task.status !== 'completed') {
+        setCompletionDialog({ isOpen: true, task });
+        return;
+      }
+    }
     if (taskId) {
       onTaskMove(taskId, status);
     }
@@ -76,6 +91,36 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
     e.dataTransfer.setData('text/plain', taskId);
     e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
+    if (newStatus === 'completed') {
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        setCompletionDialog({ isOpen: true, task });
+        return;
+      }
+    }
+    onTaskMove(taskId, newStatus);
+  };
+
+  const handleCompletionSubmit = (data: CompletionData) => {
+    if (!completionDialog.task) return;
+    
+    updateTask(completionDialog.task.id, {
+      status: 'completed',
+      actualMinutes: data.timeTaken,
+      notes: [
+        completionDialog.task.notes || '',
+        data.challenges && `Challenges: ${data.challenges}`,
+        data.comments && `Comments: ${data.comments}`,
+        data.attachments.length > 0 && `Attachments: ${data.attachments.map(a => a.title).join(', ')}`
+      ].filter(Boolean).join('\n\n'),
+      completedAt: new Date()
+    });
+    
+    onTaskMove(completionDialog.task.id, 'completed');
+    setCompletionDialog({ isOpen: false, task: null });
   };
 
   return (
@@ -137,12 +182,19 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
             >
               <TaskCard 
                 task={task} 
-                onStatusChange={onTaskMove}
+                onStatusChange={handleTaskStatusChange}
               />
             </div>
           ))
         )}
       </div>
+      
+      <CompletionDialog
+        task={completionDialog.task}
+        isOpen={completionDialog.isOpen}
+        onClose={() => setCompletionDialog({ isOpen: false, task: null })}
+        onComplete={handleCompletionSubmit}
+      />
     </div>
   );
 };
