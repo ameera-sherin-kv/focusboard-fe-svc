@@ -1,4 +1,4 @@
-export type TaskStatus = 'planned' | 'in-progress' | 'completed' | 'discarded';
+export type TaskStatus = 'planned' | 'in_progress' | 'completed' | 'discarded';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
 
@@ -14,6 +14,7 @@ export interface Task {
   updatedAt: Date;
   completedAt?: Date;
   notes?: string;
+  date: string;
 }
 
 export interface Accomplishment {

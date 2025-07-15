@@ -20,8 +20,9 @@ export const DailyPlannerBoard: React.FC = () => {
     title: '',
     description: '',
     priority: 'medium' as const,
-    estimatedMinutes: 60,
-    notes: ''
+    estimatedMinutes: 240,
+    notes: '',
+    date: selectedDate.toISOString()
   });
 
   const handlePreviousDay = () => {
@@ -47,6 +48,7 @@ export const DailyPlannerBoard: React.FC = () => {
     addTask({
       ...newTaskData,
       status: newTaskStatus,
+      date: selectedDate.toISOString()
     });
 
     // Reset form
@@ -55,7 +57,8 @@ export const DailyPlannerBoard: React.FC = () => {
       description: '',
       priority: 'medium',
       estimatedMinutes: 60,
-      notes: ''
+      notes: '',
+      date: selectedDate.toISOString()
     });
     setShowNewTaskDialog(false);
   };
@@ -213,8 +216,8 @@ export const DailyPlannerBoard: React.FC = () => {
           onAddTask={handleAddTask}
         />
         <TaskColumn
-          status="in-progress"
-          tasks={getTasksByStatus('in-progress')}
+          status="in_progress"
+          tasks={getTasksByStatus('in_progress')}
           onTaskMove={moveTask}
           onAddTask={handleAddTask}
         />

@@ -35,7 +35,7 @@ const priorityConfig = {
 
 const statusConfig = {
   planned: { icon: Circle, bgColor: 'planned-bg', borderColor: 'planned' },
-  'in-progress': { icon: AlertCircle, bgColor: 'in-progress-bg', borderColor: 'in-progress' },
+  'in_progress': { icon: AlertCircle, bgColor: 'in-progress-bg', borderColor: 'in-progress' },
   completed: { icon: CheckCircle2, bgColor: 'completed-bg', borderColor: 'completed' },
   discarded: { icon: X, bgColor: 'discarded-bg', borderColor: 'discarded' },
 };

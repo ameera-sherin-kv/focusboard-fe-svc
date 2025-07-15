@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { Task, TaskStatus, Accomplishment, TimelineEntry, DashboardStats } from '@/types/task';
 import { toast } from '@/hooks/use-toast';
+import { createTask, deleteTaskById, getAllTasks, getTasksByDate, updateTaskById } from '@/api/tasks';
+
 
 interface FocusBoardContextType {
   tasks: Task[];
@@ -28,43 +30,6 @@ export const useFocusBoard = () => {
 };
 
 // Sample data for demo
-const initialTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Implement user authentication',
-    description: 'Set up login/logout functionality with JWT tokens',
-    status: 'planned',
-    priority: 'high',
-    estimatedMinutes: 120,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    notes: 'Need to research best practices for JWT storage'
-  },
-  {
-    id: '2',
-    title: 'Design API endpoints',
-    description: 'Create REST API documentation for user management',
-    status: 'in-progress',
-    priority: 'medium',
-    estimatedMinutes: 90,
-    actualMinutes: 45,
-    createdAt: new Date(Date.now() - 3600000),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    title: 'Set up database migrations',
-    description: 'Create initial schema for users and tasks',
-    status: 'completed',
-    priority: 'high',
-    estimatedMinutes: 60,
-    actualMinutes: 75,
-    createdAt: new Date(Date.now() - 7200000),
-    updatedAt: new Date(),
-    completedAt: new Date(),
-  }
-];
-
 const initialAccomplishments: Accomplishment[] = [
   {
     id: '1',
@@ -80,7 +45,7 @@ const initialAccomplishments: Accomplishment[] = [
 ];
 
 export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [accomplishments, setAccomplishments] = useState<Accomplishment[]>(initialAccomplishments);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -97,31 +62,35 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setTimeline(prev => [entry, ...prev]);
   }, []);
 
-  const addTask = useCallback((taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newTask: Task = {
-      ...taskData,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setTasks(prev => [...prev, newTask]);
-    addTimelineEntry('Task Created', `Created task: ${newTask.title}`, newTask.id);
-    toast({
-      title: "Task created",
-      description: `"${newTask.title}" has been added to your board.`,
-    });
+  const addTask = useCallback(async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const newTask = await createTask(taskData);   
+      setTasks(prev => [...prev, newTask]);
+      addTimelineEntry('Task Created', `Created task: ${newTask.title}`, newTask.id);
+      toast({
+        title: "Task created",
+        description: `"${newTask.title}" has been added to your board.`,
+      });
+    } catch (err) {
+      console.error(err);
+    }
   }, [addTimelineEntry]);
 
-  const updateTask = useCallback((id: string, updates: Partial<Task>) => {
-    setTasks(prev => prev.map(task => 
-      task.id === id 
-        ? { ...task, ...updates, updatedAt: new Date() }
-        : task
-    ));
-    addTimelineEntry('Task Updated', `Updated task details`, id);
+  const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
+    try {
+      await updateTaskById(id, updates);
+      setTasks(prev => prev.map(task => 
+        task.id === id 
+          ? { ...task, ...updates, updatedAt: new Date() }
+          : task
+      ));
+      addTimelineEntry('Task Updated', `Updated task details`, id);
+    } catch (err) {
+      console.error(err);
+    }
   }, [addTimelineEntry]);
 
-  const moveTask = useCallback((id: string, newStatus: TaskStatus) => {
+  const moveTask = useCallback(async (id: string, newStatus: TaskStatus) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
@@ -129,43 +98,42 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       status: newStatus,
       updatedAt: new Date(),
     };
-
     if (newStatus === 'completed') {
       updatedTask.completedAt = new Date();
-      
-      // Auto-create accomplishment for completed task
-      const accomplishment: Omit<Accomplishment, 'id' | 'createdAt' | 'updatedAt'> = {
-        taskId: id,
-        title: `Completed: ${task.title}`,
-        description: task.description,
-        timeTaken: task.actualMinutes || task.estimatedMinutes,
-      };
-      addAccomplishment(accomplishment);
+      return;
     }
-
-    setTasks(prev => prev.map(task => 
-      task.id === id ? { ...task, ...updatedTask } : task
-    ));
-
-    addTimelineEntry('Task Moved', `Moved to ${newStatus}`, id);
-    
-    toast({
-      title: `Task ${newStatus}`,
-      description: `"${task.title}" moved to ${newStatus}.`,
-    });
+    try {
+      await updateTaskById(id, updatedTask);
+      setTasks(prev => prev.map(task => 
+        task.id === id ? { ...task, ...updatedTask } : task
+      ));
+  
+      addTimelineEntry('Task Moved', `Moved to ${newStatus}`, id);
+      
+      toast({
+        title: `Task ${newStatus}`,
+        description: `"${task.title}" moved to ${newStatus}.`,
+      });
+    } catch (err) {
+      console.error(err);
+    }
   }, [tasks, addTimelineEntry]);
 
-  const deleteTask = useCallback((id: string) => {
+  const deleteTask = useCallback(async (id: string) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
-    setTasks(prev => prev.filter(task => task.id !== id));
-    addTimelineEntry('Task Deleted', `Deleted task: ${task.title}`, id);
-    
-    toast({
-      title: "Task deleted",
-      description: `"${task.title}" has been removed.`,
-    });
+    try {
+      await deleteTaskById(id);
+      addTimelineEntry('Task Deleted', `Deleted task: ${task.title}`, id);
+      toast({
+        title: "Task deleted",
+        description: `"${task.title}" has been removed.`,
+      });
+      setTasks(prev => prev.filter(task => task.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   }, [tasks, addTimelineEntry]);
 
   const addAccomplishment = useCallback((accomplishmentData: Omit<Accomplishment, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -188,9 +156,23 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     addTimelineEntry('Accomplishment Updated', `Updated accomplishment details`, undefined, id);
   }, [addTimelineEntry]);
 
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const allTasks = await getTasksByDate(selectedDate.toISOString())
+        setTasks(allTasks);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  
+    fetchTasks();
+  }, [updateTask, selectedDate]);
+
   const getStats = useCallback((): DashboardStats => {
     const plannedTasks = tasks.filter(t => t.status === 'planned').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'in-progress').length;
+    const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
     const completedTasks = tasks.filter(t => t.status === 'completed').length;
     const discardedTasks = tasks.filter(t => t.status === 'discarded').length;
     

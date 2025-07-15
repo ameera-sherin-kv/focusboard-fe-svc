@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFocusBoard } from '@/contexts/FocusBoardContext';
+import { getTaskById } from '@/api/tasks';
 
 interface TaskColumnProps {
   status: TaskStatus;
@@ -30,7 +31,7 @@ const columnConfig = {
     borderColor: 'planned',
     description: 'Tasks ready to start'
   },
-  'in-progress': {
+  'in_progress': {
     title: '⚙️ In Progress',
     icon: Settings,
     bgColor: 'in-progress-bg',
@@ -73,12 +74,12 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const taskId = e.dataTransfer.getData('text/plain');
-    if (taskId && status === 'completed') {
-      const task = tasks.find(t => t.id === taskId);
-      if (task && task.status !== 'completed') {
+        if (taskId && status === 'completed') {
+      const task = await getTaskById(taskId);
+      if (task && task.status !== 'completed') {  
         setCompletionDialog({ isOpen: true, task });
         return;
       }
