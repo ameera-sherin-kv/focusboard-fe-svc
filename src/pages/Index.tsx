@@ -15,6 +15,7 @@ import {
   Target,
   Zap
 } from 'lucide-react';
+import { SummarySection } from '@/components/SummarySection';
 
 const Index = () => {
   return (
@@ -39,14 +40,13 @@ const Index = () => {
                   <Zap className="h-4 w-4 text-primary" />
                   <span>Stay focused, stay productive</span>
                 </div>
-                <ExportOptions />
               </div>
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-6 py-8">
+        <main className="container mx-auto px-6 py-8 overflow-y-auto">
           <Tabs defaultValue="planner" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3 lg:w-[450px] mx-auto">
               <TabsTrigger value="planner" className="gap-2">
@@ -57,9 +57,9 @@ const Index = () => {
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Analytics</span>
               </TabsTrigger>
-              <TabsTrigger value="timeline" className="gap-2">
+                <TabsTrigger value="summary" className="gap-2">
                 <History className="h-4 w-4" />
-                <span className="hidden sm:inline">Timeline</span>
+                <span className="hidden sm:inline">Summary</span>
               </TabsTrigger>
             </TabsList>
 
@@ -71,13 +71,14 @@ const Index = () => {
               <StatusDashboard />
             </TabsContent>
 
-            <TabsContent value="timeline" className="space-y-6">
-              <TimelineLog />
+            <TabsContent value="summary" className="space-y-6">
+              {/* <TimelineLog /> */}
+              <SummarySection />     
             </TabsContent>
           </Tabs>
         </main>
 
-        {/* Footer */}
+        {/* Footer
         <footer className="border-t bg-background/50 mt-16">
           <div className="container mx-auto px-6 py-8">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -89,7 +90,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-        </footer>
+        </footer> */}
       </div>
     </FocusBoardProvider>
   );
