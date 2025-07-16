@@ -136,6 +136,7 @@ export const DailyPlannerBoard: React.FC = () => {
                     <label className="text-sm font-medium">Priority</label>
                     <Select 
                       value={newTaskData.priority} 
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       onValueChange={(value: any) => setNewTaskData({ ...newTaskData, priority: value })}
                     >
                       <SelectTrigger className="mt-1">

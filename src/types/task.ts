@@ -31,11 +31,9 @@ export interface Accomplishment {
 }
 
 export interface Attachment {
-  id: string;
-  type: 'pr' | 'screenshot' | 'document' | 'note';
+  type: 'pull_request' | 'screenshot' | 'document';
   title: string;
   url?: string;
-  content?: string;
 }
 
 export interface TimelineEntry {

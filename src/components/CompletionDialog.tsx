@@ -21,7 +21,7 @@ export interface CompletionData {
   challenges: string;
   comments: string;
   attachments: {
-    type: 'screenshot' | 'pr' | 'document';
+    type: 'screenshot' | 'pull_request' | 'document';
     title: string;
     url?: string;
     content?: string;
@@ -42,7 +42,7 @@ export const CompletionDialog: React.FC<CompletionDialogProps> = ({
   });
 
   const [newAttachment, setNewAttachment] = useState({
-    type: 'pr' as const,
+    type: 'pull_request' as const,
     title: '',
     url: ''
   });
@@ -68,7 +68,7 @@ export const CompletionDialog: React.FC<CompletionDialogProps> = ({
           url: newAttachment.url || undefined
         }]
       }));
-      setNewAttachment({ type: 'pr', title: '', url: '' });
+      setNewAttachment({ type: 'pull_request', title: '', url: '' });
     }
   };
 
@@ -157,6 +157,7 @@ export const CompletionDialog: React.FC<CompletionDialogProps> = ({
                   value={newAttachment.type}
                   onChange={(e) => setNewAttachment(prev => ({
                     ...prev,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     type: e.target.value as any
                   }))}
                   className="border rounded px-2 py-1 text-sm"
@@ -202,7 +203,7 @@ export const CompletionDialog: React.FC<CompletionDialogProps> = ({
               <div className="space-y-2">
                 {formData.attachments.map((attachment, index) => (
                   <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                    {attachment.type === 'pr' && <Link className="h-4 w-4" />}
+                    {attachment.type === 'pull_request' && <Link className="h-4 w-4" />}
                     {attachment.type === 'screenshot' && <Upload className="h-4 w-4" />}
                     {attachment.type === 'document' && <FileText className="h-4 w-4" />}
                     

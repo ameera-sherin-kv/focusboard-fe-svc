@@ -52,7 +52,7 @@ export const AccomplishmentsPanel: React.FC = () => {
   };
 
   const handleEditAccomplishment = (accomplishment: Accomplishment) => {
-    setEditingId(accomplishment.id);
+    setEditingId(accomplishment.taskId);
   };
 
   const handleSaveAccomplishment = (id: string, data: Partial<Accomplishment>) => {
@@ -262,7 +262,7 @@ const AccomplishmentCard: React.FC<AccomplishmentCardProps> = ({
               )}
               
               <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                <span>{format(accomplishment.createdAt, 'MMM d, yyyy • h:mm a')}</span>
+                <span>{format(accomplishment.timeTaken, 'MMM d, yyyy • h:mm a')}</span>
                 {accomplishment.timeTaken && (
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
@@ -371,12 +371,11 @@ const AccomplishmentCard: React.FC<AccomplishmentCardProps> = ({
                 <h4 className="text-sm font-medium text-foreground mb-2">Attachments</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {accomplishment.attachments.map((attachment) => (
-                    <Card key={attachment.id} className="p-3 bg-background">
+                    <Card key={attachment.title} className="p-3 bg-background">
                       <div className="flex items-center gap-2">
-                        {attachment.type === 'pr' && <ExternalLink className="h-4 w-4 text-primary" />}
+                        {attachment.type === 'pull_request' && <ExternalLink className="h-4 w-4 text-primary" />}
                         {attachment.type === 'screenshot' && <Image className="h-4 w-4 text-primary" />}
                         {attachment.type === 'document' && <FileText className="h-4 w-4 text-primary" />}
-                        {attachment.type === 'note' && <FileText className="h-4 w-4 text-primary" />}
                         <span className="text-sm font-medium">{attachment.title}</span>
                         {attachment.url && (
                           <Button size="sm" variant="ghost" className="h-6 w-6 p-0 ml-auto">

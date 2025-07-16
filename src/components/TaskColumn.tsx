@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useFocusBoard } from '@/contexts/FocusBoardContext';
 import { getTaskById } from '@/api/tasks';
+import { createAccomplishment } from '@/api/accomplishments';
 
 interface TaskColumnProps {
   status: TaskStatus;
@@ -25,28 +26,28 @@ interface TaskColumnProps {
 
 const columnConfig = {
   planned: {
-    title: '📝 Planned',
+    title: 'Planned',
     icon: FileText,
     bgColor: 'planned-bg',
     borderColor: 'planned',
     description: 'Tasks ready to start'
   },
   'in_progress': {
-    title: '⚙️ In Progress',
+    title: 'In Progress',
     icon: Settings,
     bgColor: 'in-progress-bg',
     borderColor: 'in-progress',
     description: 'Currently working on'
   },
   completed: {
-    title: '✅ Completed',
+    title: 'Completed',
     icon: CheckCircle2,
     bgColor: 'completed-bg',
     borderColor: 'completed',
     description: 'Successfully finished'
   },
   discarded: {
-    title: '❌ Discarded',
+    title: 'Discarded',
     icon: X,
     bgColor: 'discarded-bg',
     borderColor: 'discarded',
@@ -118,6 +119,20 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
         data.attachments.length > 0 && `Attachments: ${data.attachments.map(a => a.title).join(', ')}`
       ].filter(Boolean).join('\n\n'),
       completedAt: new Date()
+    });
+
+    createAccomplishment({
+      title: completionDialog.task.title,
+      description: completionDialog.task.description,
+      timeTaken: data.timeTaken,
+      challenges: data.challenges,
+      comments: data.comments,
+      attachments: data.attachments.map(a => ({
+        type: a.type,
+        title: a.title,
+        url: a.url,
+      })),
+      taskId: completionDialog.task.id,
     });
     
     onTaskMove(completionDialog.task.id, 'completed');

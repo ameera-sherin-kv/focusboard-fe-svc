@@ -1,5 +1,5 @@
 import { Task } from "@/types/task";
-import { mapTaskFromApi } from "@/utils/mapTaskFromApi";
+import { mapTaskFromApi } from "@/utils/mapObjectFromApi";
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
