@@ -15,6 +15,7 @@ export interface Task {
   completedAt?: Date;
   notes?: string;
   date: string;
+  projectId?: string;
 }
 
 export interface Accomplishment {

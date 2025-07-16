@@ -51,6 +51,7 @@ export const getAllTasks = async (): Promise<Task[]> => {
         estimated_time: task.estimatedMinutes,
         notes: task.notes,
         date: task.date,
+        project_id: task.projectId,
       })
     });
   
