@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DashboardStats } from '@/types/task';
+import { getWeeklyStats, WeeklyStat } from '@/api/weeklyStats';
 
 const COLORS = {
   planned: 'hsl(var(--planned))',
@@ -36,10 +37,10 @@ const COLORS = {
   completed: 'hsl(var(--completed))',
   discarded: 'hsl(var(--discarded))',
 };
+  
 
 export const StatusDashboard: React.FC = () => {
-  const { tasks, fetchStats, stats } = useFocusBoard();
-  console.log('Stats: ', stats);
+  const { tasks, fetchStats, stats, selectedDate } = useFocusBoard();
 
   const taskDistributionData = [
     { name: 'Planned', value: stats.plannedTasks, color: COLORS.planned },
@@ -56,16 +57,6 @@ export const StatusDashboard: React.FC = () => {
     }
   ];
 
-  const weeklyData = [
-    { day: 'Mon', completed: 3, planned: 5 },
-    { day: 'Tue', completed: 4, planned: 6 },
-    { day: 'Wed', completed: 2, planned: 4 },
-    { day: 'Thu', completed: 5, planned: 5 },
-    { day: 'Fri', completed: 4, planned: 6 },
-    { day: 'Sat', completed: 2, planned: 3 },
-    { day: 'Sun', completed: 1, planned: 2 },
-  ];
-
   const formatTime = (minutes: number) => {
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
@@ -75,7 +66,10 @@ export const StatusDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+    getWeeklyStats(selectedDate.toISOString().split('T')[0]).then(setWeeklyData);
+  }, [fetchStats, selectedDate]);
+
+  const [weeklyData, setWeeklyData] = useState<WeeklyStat[]>([]);
 
   return (
     <div className="space-y-6">
@@ -169,7 +163,7 @@ export const StatusDashboard: React.FC = () => {
           </h3>
           {stats.totalEstimatedMinutes > 0 ? (
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="90%">
                 <BarChart data={timeComparisonData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
@@ -207,7 +201,7 @@ export const StatusDashboard: React.FC = () => {
           Weekly Productivity Trend
         </h3>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="90%">
             <AreaChart data={weeklyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" />

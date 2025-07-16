@@ -1,3 +1,4 @@
+import { WeeklyStat } from "@/api/weeklyStats";
 import { Accomplishment, Task, TaskPriority, TaskStatus } from "@/types/task";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,5 +31,14 @@ export function mapAccomplishmentFromApi(data: any): Accomplishment {
     attachments: data.attachments ?? undefined,
     createdAt: new Date(data.created_at),
     updatedAt: new Date(data.updated_at),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapWeeklyStatFromApi(data: any): WeeklyStat {
+  return {
+    day: data.day,
+    planned: data.planned,
+    completed: data.completed,
   };
 }

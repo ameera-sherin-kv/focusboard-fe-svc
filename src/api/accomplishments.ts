@@ -4,8 +4,6 @@ import { mapAccomplishmentFromApi } from "@/utils/mapObjectFromApi";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const createAccomplishment = async (accomplishment: Omit<Accomplishment, 'id' | 'createdAt' | 'updatedAt'>) => {
-    console.log(`Creating accomplishment: \ntitle: ${accomplishment.title}\ndescription: ${accomplishment.description}\ntimeTaken: ${accomplishment.timeTaken}\nchallenges: ${accomplishment.challenges}\ncomments: ${accomplishment.comments}\ntaskId: ${accomplishment.taskId}`);
-    console.log('Proofs: ', accomplishment.attachments.map(a => a));    
     const res = await fetch(`${API_BASE_URL}/accomplishments`, {
       method: 'POST',
       headers: {
