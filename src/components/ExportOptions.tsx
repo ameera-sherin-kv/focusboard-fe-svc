@@ -3,28 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FileText, FileSpreadsheet, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { SummaryData } from './SummarySection';
 
-interface SummaryEntry {
-  delivery: string;
-  highlight: string;
-  solution: string;
-}
+// const summaryData: SummaryData[] = [
+//   {
+//     deliveryDetails: 'API built for time tracking',
+//     accomplishments: 'Endpoints created for tasks and accomplishments',
+//     approach: 'Used RESTful design with controller-service-repository pattern',
+//   },
+//   {
+//     deliveryDetails: 'Daily summary export feature',
+//     accomplishments: 'Implemented export to CSV and PDF',
+//     approach: 'Used Blob for CSV and window.print() for PDF generation',
+//   },
+// ];
 
-// Example data - replace this with your actual state or props
-const summaryData: SummaryEntry[] = [
-  {
-    delivery: 'API built for time tracking',
-    highlight: 'Endpoints created for tasks and accomplishments',
-    solution: 'Used RESTful design with controller-service-repository pattern',
-  },
-  {
-    delivery: 'Daily summary export feature',
-    highlight: 'Implemented export to CSV and PDF',
-    solution: 'Used Blob for CSV and window.print() for PDF generation',
-  },
-];
-
-export const ExportOptions: React.FC = () => {
+export const ExportOptions: React.FC<{ summaryData: SummaryData[] }> = ({ summaryData }) => {
   const [isExporting, setIsExporting] = useState(false);
 
   const exportToCSV = () => {
@@ -33,9 +27,9 @@ export const ExportOptions: React.FC = () => {
       const csvData = [
         ['Delivery Details', 'Highlights of Accomplishments', 'Approach / Solution (AI-generated)'],
         ...summaryData.map(entry => [
-          entry.delivery,
-          entry.highlight,
-          entry.solution
+          entry.deliveryDetails,
+          entry.accomplishments,
+          entry.approach
         ]),
       ];
 
@@ -116,9 +110,9 @@ export const ExportOptions: React.FC = () => {
               <tbody>
                 ${summaryData.map(entry => `
                   <tr>
-                    <td>${entry.delivery}</td>
-                    <td>${entry.highlight}</td>
-                    <td>${entry.solution}</td>
+                    <td>${entry.deliveryDetails}</td>
+                    <td>${entry.accomplishments}</td>
+                    <td>${entry.approach}</td>
                   </tr>
                 `).join('')}
               </tbody>

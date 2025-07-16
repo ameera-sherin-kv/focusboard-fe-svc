@@ -1,55 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DateRange } from 'react-day-picker';
 import { isWithinInterval, parseISO } from 'date-fns';
 import { DateRangePicker } from './DateRangePicker';
 import { ExportOptions } from './ExportOptions';
+import { getSummaryTable } from '@/api/summaryTable';
+
+export interface SummaryData {
+  deliveryDetails: string;
+  accomplishments: string;
+  approach: string;
+}
 
 export const SummarySection: React.FC = () => {
-  const dummySummaryData = [
-    {
-      date: '2025-07-14',
-      deliveryDetails: 'Completed task "User Authentication Flow"',
-      accomplishments: 'Implemented secure login with JWT, refresh tokens, and role-based access',
-      approach: 'Used `bcrypt` for hashing passwords, JWT for token management, and middleware for route protection.',
-    },
-    {
-      date: '2025-07-15',
-      deliveryDetails: 'Integrated PostgreSQL with Knex.js',
-      accomplishments: 'Set up migration & seed files, established DB connection and tested queries',
-      approach: 'Used Knex’s query builder pattern for clean and reusable SQL logic across services.',
-    },
-    {
-      date: '2025-07-16',
-      deliveryDetails: 'Built API endpoints for Accomplishments module',
-      accomplishments: 'Implemented create, delete, and proof upload routes with service-layer logic',
-      approach: 'Followed the Controller-Service-Repository pattern to maintain separation of concerns.',
-    },
-    {
-      date: '2025-07-17',
-      deliveryDetails: 'Frontend Time Tracking chart integration',
-      accomplishments: 'Fetched weekly stats from backend and displayed estimated vs actual time',
-      approach: 'Used Recharts `BarChart` and a responsive container layout with fallback UI when data is missing.',
-    },
-    {
-      date: '2025-07-18',
-      deliveryDetails: 'Summary Section UI with Date Range Picker',
-      accomplishments: 'Created table to show delivery insights and integrated range picker disabling weekends',
-      approach: 'Leveraged `react-day-picker` and custom UI components for consistent UX with Tailwind styling.',
-    },
-  ];
 
+  const [summaryData, setSummaryData] = useState<SummaryData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  const filteredData = dateRange?.from && dateRange?.to
-    ? dummySummaryData.filter((entry) =>
-        isWithinInterval(parseISO(entry.date), {
-          start: dateRange.from,
-          end: dateRange.to,
-        })
-      )
-    : dummySummaryData;
+
+  useEffect(() => {
+    if (dateRange?.from && dateRange?.to) {
+      setIsLoading(true);
+      getSummaryTable(dateRange.from.toISOString().split('T')[0], dateRange.to.toISOString().split('T')[0]).then(setSummaryData).finally(() => setIsLoading(false));
+    }
+  }, [dateRange]);
 
   return (
     <div className="space-y-6">
@@ -74,7 +50,7 @@ export const SummarySection: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {!dummySummaryData ? (
+              {isLoading ? (
                 // Skeleton loading state
                 [...Array(3)].map((_, i) => (
                   <tr key={i} className="border-t">
@@ -83,14 +59,14 @@ export const SummarySection: React.FC = () => {
                     <td className="px-4 py-2"><Skeleton className="h-4 w-full" /></td>
                   </tr>
                 ))
-              ) : filteredData.length === 0 ? (
+              ) : summaryData.length === 0 ? (
                 <tr>
                   <td colSpan={3} className="text-center text-muted-foreground py-6">
                     No summary data available for the selected range
                   </td>
                 </tr>
               ) : (
-                filteredData.map((row, index) => (
+                summaryData.map((row, index) => (
                   <tr key={index} className="border-t">
                     <td className="px-4 py-2">{row.deliveryDetails}</td>
                     <td className="px-4 py-2">{row.accomplishments}</td>
@@ -102,9 +78,9 @@ export const SummarySection: React.FC = () => {
           </table>
         </div>
       </Card>
-      {dateRange && (
+      {summaryData.length > 0 && !isLoading && (
         <div className="flex justify-center mt-4">
-          <ExportOptions />
+          <ExportOptions summaryData={summaryData} />
         </div>
       )}
     </div>
