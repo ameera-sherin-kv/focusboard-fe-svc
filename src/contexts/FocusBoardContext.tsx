@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { Task, TaskStatus, Accomplishment, TimelineEntry, DashboardStats } from '@/types/task';
 import { toast } from '@/hooks/use-toast';
 import { createTask, deleteTaskById, getAllTasks, getTasksByDate, updateTaskById } from '@/api/tasks';
+import { getDashboardStats } from '@/api/dashboard';
 
 
 interface FocusBoardContextType {
@@ -16,7 +17,8 @@ interface FocusBoardContextType {
   deleteTask: (id: string) => void;
   addAccomplishment: (accomplishment: Omit<Accomplishment, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateAccomplishment: (id: string, updates: Partial<Accomplishment>) => void;
-  getStats: () => DashboardStats;
+  stats: DashboardStats | null;
+  fetchStats: () => void;
 }
 
 const FocusBoardContext = createContext<FocusBoardContextType | undefined>(undefined);
@@ -49,6 +51,16 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [accomplishments, setAccomplishments] = useState<Accomplishment[]>(initialAccomplishments);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [stats, setStats] = useState<DashboardStats | null>({
+    plannedTasks: 0,
+    completedTasks: 0,
+    inProgressTasks: 0,
+    discardedTasks: 0,
+    totalEstimatedMinutes: 0,
+    totalActualMinutes: 0,
+    completionRate: 0,
+  });
+
 
   const addTimelineEntry = useCallback((action: string, description?: string, taskId?: string, accomplishmentId?: string) => {
     const entry: TimelineEntry = {
@@ -170,27 +182,15 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     fetchTasks();
   }, [updateTask, selectedDate]);
 
-  const getStats = useCallback((): DashboardStats => {
-    const plannedTasks = tasks.filter(t => t.status === 'planned').length;
-    const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
-    const completedTasks = tasks.filter(t => t.status === 'completed').length;
-    const discardedTasks = tasks.filter(t => t.status === 'discarded').length;
-    
-    const totalEstimatedMinutes = tasks.reduce((sum, task) => sum + task.estimatedMinutes, 0);
-    const totalActualMinutes = tasks.reduce((sum, task) => sum + (task.actualMinutes || 0), 0);
-    
-    const completionRate = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
-
-    return {
-      plannedTasks,
-      inProgressTasks,
-      completedTasks,
-      discardedTasks,
-      totalEstimatedMinutes,
-      totalActualMinutes,
-      completionRate,
-    };
-  }, [tasks]);
+  const fetchStats = useCallback(async () => {
+    try {
+      const result = await getDashboardStats(selectedDate.toISOString().split('T')[0]);
+      console.log('Stats: ', result);
+      setStats(result);
+    } catch (error) {
+      console.error('Failed to fetch dashboard stats:', error);
+    }
+  }, [selectedDate]);
 
   const value: FocusBoardContextType = {
     tasks,
@@ -204,7 +204,8 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     deleteTask,
     addAccomplishment,
     updateAccomplishment,
-    getStats,
+    stats,
+    fetchStats,
   };
 
   return (

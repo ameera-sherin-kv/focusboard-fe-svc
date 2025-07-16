@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFocusBoard } from '@/contexts/FocusBoardContext';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DashboardStats } from '@/types/task';
 
 const COLORS = {
   planned: 'hsl(var(--planned))',
@@ -37,8 +38,8 @@ const COLORS = {
 };
 
 export const StatusDashboard: React.FC = () => {
-  const { tasks, getStats } = useFocusBoard();
-  const stats = getStats();
+  const { tasks, fetchStats, stats } = useFocusBoard();
+  console.log('Stats: ', stats);
 
   const taskDistributionData = [
     { name: 'Planned', value: stats.plannedTasks, color: COLORS.planned },
@@ -71,6 +72,10 @@ export const StatusDashboard: React.FC = () => {
     const mins = minutes % 60;
     return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   };
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   return (
     <div className="space-y-6">
@@ -105,14 +110,14 @@ export const StatusDashboard: React.FC = () => {
         />
         <MetricCard
           title="Completed Today"
-          value={stats.completedTasks.toString()}
+          value={stats.completedTasks}
           icon={CheckCircle2}
           color="completed"
           subtitle={`of ${tasks.length} total tasks`}
         />
         <MetricCard
           title="Active Tasks"
-          value={(stats.plannedTasks + stats.inProgressTasks).toString()}
+          value={`${stats.plannedTasks + stats.inProgressTasks}`}
           icon={AlertCircle}
           color="in-progress"
           subtitle={`${stats.plannedTasks} planned, ${stats.inProgressTasks} active`}
@@ -245,7 +250,7 @@ export const StatusDashboard: React.FC = () => {
 
 interface MetricCardProps {
   title: string;
-  value: string;
+  value: string | number;
   icon: React.ComponentType<{ className?: string }>;
   color: 'primary' | 'completed' | 'in-progress' | 'planned';
   subtitle?: string;
