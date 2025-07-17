@@ -76,7 +76,8 @@ export const getAllTasks = async (): Promise<Task[]> => {
         status: task.status,
         estimated_time: task.estimatedMinutes,
         notes: task.notes,
-        date: new Date().toISOString()
+        date: task.date,
+        project_id: task.projectId,
       })
     });
   }

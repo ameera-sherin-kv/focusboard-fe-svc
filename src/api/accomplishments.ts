@@ -82,3 +82,18 @@ export const createAccomplishment = async (accomplishment: Omit<Accomplishment, 
 
     return res.json();
   }
+
+  export const deleteAccomplishmentsByTaskId = async (taskId: string) => {
+    const res = await fetch(`${API_BASE_URL}/accomplishments/task/${taskId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to delete accomplishments');
+    }
+
+    return res.json();
+  }

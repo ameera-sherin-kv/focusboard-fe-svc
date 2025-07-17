@@ -3,6 +3,7 @@ import { Task, TaskStatus, Accomplishment, TimelineEntry, DashboardStats } from 
 import { toast } from '@/hooks/use-toast';
 import { createTask, deleteTaskById, getAllTasks, getTasksByDate, updateTaskById } from '@/api/tasks';
 import { getDashboardStats } from '@/api/dashboard';
+import { deleteAccomplishmentsByTaskId } from '@/api/accomplishments';
 
 
 interface FocusBoardContextType {
@@ -110,6 +111,8 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       status: newStatus,
       updatedAt: new Date(),
     };
+    const wasCompleted = task.status === 'completed';
+    const isNowIncomplete = updatedTask.status !== 'completed';
     if (newStatus === 'completed') {
       updatedTask.completedAt = new Date();
       return;
@@ -121,6 +124,9 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       ));
   
       addTimelineEntry('Task Moved', `Moved to ${newStatus}`, id);
+      if (wasCompleted && isNowIncomplete) {
+        await deleteAccomplishmentsByTaskId(task.id);
+      }
       
       toast({
         title: `Task ${newStatus}`,
