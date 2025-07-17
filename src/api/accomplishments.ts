@@ -1,5 +1,5 @@
 import { Accomplishment } from "@/types/task";
-import { mapAccomplishmentFromApi } from "@/utils/mapObjectFromApi";
+import { mapAccomplishmentFromApi, mapAccomplishmentWithProofsAndProjectFromApi } from "@/utils/mapObjectFromApi";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -28,8 +28,8 @@ export const createAccomplishment = async (accomplishment: Omit<Accomplishment, 
     return mapAccomplishmentFromApi(data);
   }
 
-  export const getAccomplishmentsByTaskId = async (taskId: string): Promise<Accomplishment[]> => {
-    const res = await fetch(`${API_BASE_URL}/accomplishments/${taskId}`, {
+  export const getAccomplishmentsByTaskId = async (taskId: string): Promise<Accomplishment> => {
+    const res = await fetch(`${API_BASE_URL}/accomplishments/task/${taskId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -41,7 +41,7 @@ export const createAccomplishment = async (accomplishment: Omit<Accomplishment, 
     }
 
     const data = await res.json();
-    return data.map(mapAccomplishmentFromApi);
+    return mapAccomplishmentWithProofsAndProjectFromApi(data);  
   }
 
   export const updateAccomplishmentById = async (id: string, accomplishment: Accomplishment) => {

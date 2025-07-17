@@ -31,6 +31,26 @@ export interface Accomplishment {
   updatedAt: Date;
 }
 
+export interface Proof {
+  id: string;
+  accomplishmentId: string;
+  type: string;
+  title: string;
+  url: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AccomplishmentWithProofsAndProject extends Accomplishment {
+  project: {
+    id: string;
+    name: string;
+    description: string;
+  };
+  proofs: Proof[];
+}
+
+
 export interface Attachment {
   type: 'pull_request' | 'screenshot' | 'document';
   title: string;
