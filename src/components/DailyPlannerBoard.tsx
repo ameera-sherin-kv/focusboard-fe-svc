@@ -291,7 +291,7 @@ export const DailyPlannerBoard: React.FC = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="planned">📝 Planned</SelectItem>
-                        <SelectItem value="in-progress">⚙️ In Progress</SelectItem>
+                        <SelectItem value="in_progress">⚙️ In Progress</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

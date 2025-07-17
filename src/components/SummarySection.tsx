@@ -2,28 +2,35 @@ import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DateRange } from 'react-day-picker';
-import { isWithinInterval, parseISO } from 'date-fns';
 import { DateRangePicker } from './DateRangePicker';
 import { ExportOptions } from './ExportOptions';
 import { getSummaryTable } from '@/api/summaryTable';
 
-export interface SummaryData {
+export interface ProjectSummaryRow {
   deliveryDetails: string;
   accomplishments: string;
   approach: string;
 }
 
-export const SummarySection: React.FC = () => {
+export interface ProjectSummary {
+  projectName: string;
+  projectSummary: ProjectSummaryRow[];
+}
 
-  const [summaryData, setSummaryData] = useState<SummaryData[]>([]);
+export const SummarySection: React.FC = () => {
+  const [summaryData, setSummaryData] = useState<ProjectSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-
 
   useEffect(() => {
     if (dateRange?.from && dateRange?.to) {
       setIsLoading(true);
-      getSummaryTable(dateRange.from.toISOString().split('T')[0], dateRange.to.toISOString().split('T')[0]).then(setSummaryData).finally(() => setIsLoading(false));
+      getSummaryTable(
+        dateRange.from.toISOString().split('T')[0],
+        dateRange.to.toISOString().split('T')[0]
+      )
+        .then(setSummaryData)
+        .finally(() => setIsLoading(false));
     }
   }, [dateRange]);
 
@@ -44,6 +51,7 @@ export const SummarySection: React.FC = () => {
           <table className="min-w-full text-sm text-left">
             <thead className="bg-muted text-muted-foreground">
               <tr>
+                <th className="px-4 py-2 font-semibold">Project</th>
                 <th className="px-4 py-2 font-semibold">Delivery Details</th>
                 <th className="px-4 py-2 font-semibold">Highlights of Accomplishments</th>
                 <th className="px-4 py-2 font-semibold">Approach / Solution</th>
@@ -51,9 +59,9 @@ export const SummarySection: React.FC = () => {
             </thead>
             <tbody>
               {isLoading ? (
-                // Skeleton loading state
-                [...Array(3)].map((_, i) => (
+                [...Array(2)].map((_, i) => (
                   <tr key={i} className="border-t">
+                    <td className="px-4 py-2"><Skeleton className="h-4 w-full" /></td>
                     <td className="px-4 py-2"><Skeleton className="h-4 w-full" /></td>
                     <td className="px-4 py-2"><Skeleton className="h-4 w-full" /></td>
                     <td className="px-4 py-2"><Skeleton className="h-4 w-full" /></td>
@@ -61,23 +69,28 @@ export const SummarySection: React.FC = () => {
                 ))
               ) : summaryData.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="text-center text-muted-foreground py-6">
+                  <td colSpan={4} className="text-center text-muted-foreground py-6">
                     No summary data available for the selected range
                   </td>
                 </tr>
               ) : (
-                summaryData.map((row, index) => (
-                  <tr key={index} className="border-t">
-                    <td className="px-4 py-2">{row.deliveryDetails}</td>
-                    <td className="px-4 py-2">{row.accomplishments}</td>
-                    <td className="px-4 py-2">{row.approach}</td>
-                  </tr>
-                ))
+                summaryData.map((project, i) => {
+                  const summary = project.projectSummary[0]; // assuming one summary per project
+                  return (
+                    <tr key={i} className="border-t">
+                      <td className="px-4 py-2 font-medium">{project.projectName}</td>
+                      <td className="px-4 py-2">{summary.deliveryDetails}</td>
+                      <td className="px-4 py-2">{summary.accomplishments}</td>
+                      <td className="px-4 py-2">{summary.approach}</td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </Card>
+
       {summaryData.length > 0 && !isLoading && (
         <div className="flex justify-center mt-4">
           <ExportOptions summaryData={summaryData} />

@@ -3,39 +3,37 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FileText, FileSpreadsheet, Download } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { SummaryData } from './SummarySection';
+import { ProjectSummary } from './SummarySection';
 
-// const summaryData: SummaryData[] = [
-//   {
-//     deliveryDetails: 'API built for time tracking',
-//     accomplishments: 'Endpoints created for tasks and accomplishments',
-//     approach: 'Used RESTful design with controller-service-repository pattern',
-//   },
-//   {
-//     deliveryDetails: 'Daily summary export feature',
-//     accomplishments: 'Implemented export to CSV and PDF',
-//     approach: 'Used Blob for CSV and window.print() for PDF generation',
-//   },
-// ];
-
-export const ExportOptions: React.FC<{ summaryData: SummaryData[] }> = ({ summaryData }) => {
+export const ExportOptions: React.FC<{ summaryData: ProjectSummary[] }> = ({ summaryData }) => {
   const [isExporting, setIsExporting] = useState(false);
+
+  const flattenSummaryData = () => {
+    return summaryData.flatMap(project =>
+      project.projectSummary.map(summary => ({
+        projectName: project.projectName,
+        ...summary,
+      }))
+    );
+  };
 
   const exportToCSV = () => {
     setIsExporting(true);
     try {
+      const flatData = flattenSummaryData();
       const csvData = [
-        ['Delivery Details', 'Highlights of Accomplishments', 'Approach / Solution (AI-generated)'],
-        ...summaryData.map(entry => [
+        ['Project', 'Delivery Details', 'Highlights of Accomplishments', 'Approach / Solution (AI-generated)'],
+        ...flatData.map(entry => [
+          entry.projectName,
           entry.deliveryDetails,
           entry.accomplishments,
           entry.approach
         ]),
       ];
 
-      const csvContent = csvData.map(row =>
-        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-      ).join('\n');
+      const csvContent = csvData
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -63,6 +61,7 @@ export const ExportOptions: React.FC<{ summaryData: SummaryData[] }> = ({ summar
   const exportToPDF = () => {
     setIsExporting(true);
     try {
+      const flatData = flattenSummaryData();
       const htmlContent = `
         <html>
           <head>
@@ -86,6 +85,7 @@ export const ExportOptions: React.FC<{ summaryData: SummaryData[] }> = ({ summar
                 border: 1px solid #ccc;
                 padding: 12px;
                 text-align: left;
+                vertical-align: top;
               }
               th {
                 background-color: #f1f5f9;
@@ -102,14 +102,16 @@ export const ExportOptions: React.FC<{ summaryData: SummaryData[] }> = ({ summar
             <table>
               <thead>
                 <tr>
+                  <th>Project</th>
                   <th>Delivery Details</th>
                   <th>Highlights of Accomplishments</th>
                   <th>Approach / Solution (AI-generated)</th>
                 </tr>
               </thead>
               <tbody>
-                ${summaryData.map(entry => `
+                ${flatData.map(entry => `
                   <tr>
+                    <td>${entry.projectName}</td>
                     <td>${entry.deliveryDetails}</td>
                     <td>${entry.accomplishments}</td>
                     <td>${entry.approach}</td>
