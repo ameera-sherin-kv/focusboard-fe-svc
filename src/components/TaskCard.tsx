@@ -1,25 +1,27 @@
-import React, { useState } from 'react';
-import { Task, TaskStatus } from '@/types/task';
+import React, { useEffect, useState } from 'react';
+import { AccomplishmentWithProofsAndProject, Task, TaskStatus } from '@/types/task';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { 
-  Clock, 
-  ChevronDown, 
-  ChevronUp, 
-  Edit2, 
-  Save, 
+import {
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  Edit2,
+  Save,
   X,
   GripVertical,
   AlertCircle,
   CheckCircle2,
   Circle,
-  Trash2
+  Trash2,
+  Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFocusBoard } from '@/contexts/FocusBoardContext';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 
 interface TaskCardProps {
   task: Task;
@@ -41,9 +43,11 @@ const statusConfig = {
 };
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange, isDragging = false }) => {
-  const { updateTask, deleteTask } = useFocusBoard();
+  const { updateTask, deleteTask, getAccomplishmentByTaskId } = useFocusBoard();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [accomplishment, setAccomplishment] = useState<AccomplishmentWithProofsAndProject | null>(null);
   const [editData, setEditData] = useState({
     title: task.title,
     description: task.description || '',
@@ -84,23 +88,32 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange, isDrag
     return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   };
 
+  useEffect(() => {
+    if (task.status === 'completed') {
+      getAccomplishmentByTaskId(task.id).then((accomplishment) => {
+        setAccomplishment(accomplishment);
+      });
+    }
+  }, [task]);
+
   return (
-    <Card 
+    <Card
       className={cn(
-        'p-4 border-l-4 transition-all duration-300 cursor-pointer group hover:shadow-medium',
+        'p-4 border-l-4 transition-all duration-300 cursor-pointer group hover:shadow-medium overflow-hidden',
         `border-l-${config.borderColor} bg-${config.bgColor}`,
         isDragging && 'opacity-50 transform rotate-2',
         task.status === 'discarded' && 'opacity-60'
       )}
+      onClick={task.status === 'completed' && !showDetailsDialog ? () => {
+        getAccomplishmentByTaskId(task.id).then((accomplishment) => {
+          setAccomplishment(accomplishment);
+          setShowDetailsDialog(true);
+        });
+      } : undefined}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1">
           <GripVertical className="h-4 w-4 text-muted-foreground mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <StatusIcon className={cn(
-            'h-4 w-4 mt-1',
-            `text-${config.borderColor}`
-          )} />
-          
           <div className="flex-1 space-y-2">
             {isEditing ? (
               <Input
@@ -119,7 +132,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange, isDrag
             )}
 
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge 
+              <Badge
                 className={cn(
                   'text-xs px-2 py-1 text-white border-0',
                   task.priority === 'high' && 'bg-priority-high',
@@ -129,13 +142,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange, isDrag
               >
                 {priorityConfig[task.priority].label}
               </Badge>
-              
+
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                {task.actualMinutes && task.status === 'completed' ? (
+                {task.estimatedMinutes && accomplishment?.timeTaken && task.status === 'completed' ? (
                   <span className="flex gap-1">
                     <span className="line-through">{formatTime(task.estimatedMinutes)}</span>
-                    <span className="font-medium">{formatTime(task.actualMinutes)}</span>
+                    <span className="font-medium">{formatTime(accomplishment?.timeTaken || 0)}</span>
                   </span>
                 ) : (
                   <span>{formatTime(task.estimatedMinutes)}</span>
@@ -218,17 +231,20 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange, isDrag
             </div>
           ) : (
             <div className="flex gap-1">
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={() => setIsEditing(true)}
-                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              {task.status !== 'completed' && task.status !== 'discarded' && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditing(true)}
+                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+              )}
+
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => deleteTask(task.id)}
                 className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
               >
@@ -236,17 +252,153 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange, isDrag
               </Button>
             </div>
           )}
-          
+
           {(task.description || task.notes) && !isEditing && (
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="h-6 w-6 p-0"
-            >
-              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </Button>
+            <>
+              {task.status === 'completed' ? (
+                <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0"
+                      onClick={() => getAccomplishmentByTaskId(task.id).then((accomplishment) => {
+                        setAccomplishment(accomplishment);
+                      })}
+                    >
+                      <Info className="h-3 w-3" />
+                    </Button>
+                  </DialogTrigger>
+
+                  <DialogContent className="sm:max-w-[560px]">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg font-semibold">{task.title}</DialogTitle>
+                      <DialogDescription className="text-sm text-muted-foreground">
+                        Detailed summary of this completed task
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-5 pt-4 text-sm">
+
+                      {/* Project Tag */}
+                      {accomplishment?.project?.name && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground font-medium">Project:</span>
+                          <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {accomplishment.project.name}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Time Comparison */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-medium text-muted-foreground">Estimated Time</h4>
+                          <p className="mt-1 text-foreground">{formatTime(task.estimatedMinutes)}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-muted-foreground">Actual Time Taken</h4>
+                          {accomplishment?.timeTaken && <p
+                            className={`mt-1 font-semibold ${accomplishment.timeTaken > task.estimatedMinutes
+                                ? 'text-red-600'
+                                : 'text-green-600'
+                              }`}
+                          >
+                            {formatTime(accomplishment.timeTaken)}
+                          </p>}
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      {task.description && (
+                        <div>
+                          <h4 className="font-medium text-muted-foreground">Details</h4>
+                          <p className="mt-1">{task.description}</p>
+                        </div>
+                      )}
+
+                      {/* Challenges */}
+                      {accomplishment?.challenges && (
+                        <div>
+                          <h4 className="font-medium text-muted-foreground">Challenges</h4>
+                          <p className="mt-1">{accomplishment.challenges}</p>
+                        </div>
+                      )}
+
+                      {/* Comments */}
+                      {accomplishment?.comments && (
+                        <div>
+                          <h4 className="font-medium text-muted-foreground">Comments</h4>
+                          <p className="mt-1">{accomplishment.comments}</p>
+                        </div>
+                      )}
+
+                      {/* Proofs with icons */}
+                      {accomplishment?.proofs.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-muted-foreground mb-2">Proofs</h4>
+                          <ul className="space-y-2">
+                            {accomplishment.proofs.map((proof) => (
+                              <li key={proof.id}>
+                                <a
+                                  href={proof.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:underline"
+                                >
+                                  <svg
+                                    className="w-4 h-4 text-blue-500"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M13.828 10.172a4 4 0 015.656 5.656l-3 3a4 4 0 01-5.656-5.656M10.172 13.828a4 4 0 01-5.656-5.656l3-3a4 4 0 015.656 5.656"
+                                    />
+                                  </svg>
+                                  {proof.title}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end pt-4">
+                      <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>
+                        Close
+                      </Button>
+                    </div>
+                  </DialogContent>
+
+
+                </Dialog>
+              ) : isExpanded ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsExpanded(false)}
+                  className="h-6 w-6 p-0"
+                >
+                  <ChevronUp className="h-3 w-3" />
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsExpanded(true)}
+                  className="h-6 w-6 p-0"
+                >
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              )}
+            </>
           )}
+
         </div>
       </div>
     </Card>

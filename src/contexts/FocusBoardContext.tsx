@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
-import { Task, TaskStatus, Accomplishment, TimelineEntry, DashboardStats } from '@/types/task';
+import { Task, TaskStatus, Accomplishment, TimelineEntry, DashboardStats, AccomplishmentWithProofsAndProject } from '@/types/task';
 import { toast } from '@/hooks/use-toast';
 import { createTask, deleteTaskById, getAllTasks, getTasksByDate, updateTaskById } from '@/api/tasks';
 import { getDashboardStats } from '@/api/dashboard';
-import { deleteAccomplishmentsByTaskId } from '@/api/accomplishments';
+import { deleteAccomplishmentsByTaskId, getAccomplishmentsByTaskId } from '@/api/accomplishments';
 
 
 interface FocusBoardContextType {
@@ -20,6 +20,7 @@ interface FocusBoardContextType {
   updateAccomplishment: (id: string, updates: Partial<Accomplishment>) => void;
   stats: DashboardStats | null;
   fetchStats: () => void;
+  getAccomplishmentByTaskId: (taskId: string) => Promise<AccomplishmentWithProofsAndProject>;
 }
 
 const FocusBoardContext = createContext<FocusBoardContextType | undefined>(undefined);
@@ -88,6 +89,11 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       console.error(err);
     }
   }, [addTimelineEntry]);
+
+  const getAccomplishmentByTaskId = useCallback(async (taskId: string) => {
+    const accomplishment = await getAccomplishmentsByTaskId(taskId);
+    return accomplishment;
+  }, []);
 
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
     try {
@@ -212,6 +218,7 @@ export const FocusBoardProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     updateAccomplishment,
     stats,
     fetchStats,
+    getAccomplishmentByTaskId,
   };
 
   return (
